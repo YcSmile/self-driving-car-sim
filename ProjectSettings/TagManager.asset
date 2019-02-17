@@ -5,6 +5,10 @@ TagManager:
   serializedVersion: 2
   tags:
   - Waypoint
+  - Lidar
+  - PointCloudBase
+  - pSystem
+  - ParticleSystems
   layers:
   - Default
   - TransparentFX

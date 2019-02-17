@@ -5,7 +5,8 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
-
+using Google.Protobuf;
+using LiDarMsg;
 
 namespace UnityStandardAssets.Vehicles.Car
 {
@@ -72,6 +73,15 @@ namespace UnityStandardAssets.Vehicles.Car
 
         public float BrakeInput { get; private set; }
 
+
+        // 执行点云命令扫描
+        public delegate LiDarData TriggerLaserScan();
+        public static event TriggerLaserScan onLaserScanEvent;
+
+        // 发送点云数据
+        public delegate void TriggerSendLaser(float time, LiDarData hitPoint);
+        public static event TriggerSendLaser onSendLaserEvent;
+
         private bool m_isRecording = false;
         public bool IsRecording {
             get
@@ -85,6 +95,7 @@ namespace UnityStandardAssets.Vehicles.Car
                 if(value == true)
                 { 
 					Debug.Log("Starting to record");
+                    // 清空队列
 					carSamples = new Queue<CarSample>();
 					StartCoroutine(Sample());             
                 } 
@@ -414,22 +425,29 @@ namespace UnityStandardAssets.Vehicles.Car
 			yield return new WaitForSeconds(0.000f); //retrieve as fast as we can but still allow communication of main thread to screen and UISystem
 			if (carSamples.Count > 0) {
 				//pull off a sample from the que
-				CarSample sample = carSamples.Dequeue();
+				CarSample sample = carSamples.Dequeue();    // 提取一个采样值
 
-				//pysically moving the car to get the right camera position
+				// pysically moving the car to get the right camera position
+                // 进行移动
 				transform.position = sample.position;
 				transform.rotation = sample.rotation;
 
 				// Capture and Persist Image
+                // 提取后保存参数 
 				string centerPath = WriteImage (CenterCamera, "center", sample.timeStamp);
-				string leftPath = WriteImage (LeftCamera, "left", sample.timeStamp);
-				string rightPath = WriteImage (RightCamera, "right", sample.timeStamp);
+				// string leftPath = WriteImage (LeftCamera, "left", sample.timeStamp);
+				// string rightPath = WriteImage (RightCamera, "right", sample.timeStamp);
+                
+                // 添加点云采样
+                string lidarPath = WriteLidarData(sample.timeStamp);
+                
 
-				string row = string.Format ("{0},{1},{2},{3},{4},{5},{6}\n", centerPath, leftPath, rightPath, sample.steeringAngle, sample.throttle, sample.brake, sample.speed);
+				string row = string.Format ("{0},{1},{2},{3},{4},{5}\n", centerPath, lidarPath, sample.steeringAngle, sample.throttle, sample.brake, sample.speed);
 				File.AppendAllText (Path.Combine (m_saveLocation, CSVFileName), row);
 			}
 			if (carSamples.Count > 0) {
 				//request if there are more samples to pull
+                // 如果有更多的采样值的情况下，继续提取
 				StartCoroutine(WriteSamplesToDisk()); 
 			}
 			else 
@@ -496,22 +514,50 @@ namespace UnityStandardAssets.Vehicles.Car
             Directory.CreateDirectory (Path.Combine(m_saveLocation, DirFrames));
         }
 
-        private string WriteImage (Camera camera, string prepend, string timestamp)
+        private string WriteLidarData(string timestamp){
+
+            // try{
+                LiDarData hitPoint = onLaserScanEvent();
+                string directory = Path.Combine(m_saveLocation, DirFrames);
+                string path = Path.Combine(directory, "LidarSensor" + "_" + timestamp + ".bin");
+                // onSendLaserEvent(0.0f,hitPoint);
+                // 讲点云发送到服务端
+                using(var output = File.Create(path))
+                {
+                    hitPoint.WriteTo (output);
+                }
+                hitPoint = null;
+            // }
+			// catch{
+			// }
+            return path;
+        }
+
+        // 1 2018年12月19日15:00:04 不保存img
+        private string WriteImage (Camera camera,string prepend, string timestamp)
         {
             //needed to force camera update 
-            camera.Render();
-            RenderTexture targetTexture = camera.targetTexture;
-            RenderTexture.active = targetTexture;
-            Texture2D texture2D = new Texture2D (targetTexture.width, targetTexture.height, TextureFormat.RGB24, false);
-            texture2D.ReadPixels (new Rect (0, 0, targetTexture.width, targetTexture.height), 0, 0);
-            texture2D.Apply ();
-            byte[] image = texture2D.EncodeToJPG ();
-            UnityEngine.Object.DestroyImmediate (texture2D);
+            // 强制进行更新
+            // 为了程序满足
             string directory = Path.Combine(m_saveLocation, DirFrames);
             string path = Path.Combine(directory, prepend + "_" + timestamp + ".jpg");
-            File.WriteAllBytes (path, image);
-            image = null;
             return path;
+
+            // 2018年12月19日15:00:52 修改
+            // camera.Render();
+            // RenderTexture targetTexture = camera.targetTexture;
+            // RenderTexture.active = targetTexture;
+            // Texture2D texture2D = new Texture2D (targetTexture.width, targetTexture.height, TextureFormat.RGB24, false);
+            // texture2D.ReadPixels (new Rect (0, 0, targetTexture.width, targetTexture.height), 0, 0);
+            // texture2D.Apply ();
+            // byte[] image = texture2D.EncodeToJPG ();
+            // UnityEngine.Object.DestroyImmediate (texture2D);
+            // string directory = Path.Combine(m_saveLocation, DirFrames);
+            // string path = Path.Combine(directory, prepend + "_" + timestamp + ".jpg");
+            
+            // File.WriteAllBytes (path, image);
+            // image = null;
+            // return path;
         }
     }
 

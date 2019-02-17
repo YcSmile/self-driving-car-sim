@@ -36,6 +36,7 @@ using UnityEngine;
 using WebSocketSharp;
 using WebSocketSharp.Net;
 
+// webSocket
 namespace SocketIO
 {
 	public class SocketIOComponent : MonoBehaviour
@@ -241,7 +242,7 @@ namespace SocketIO
 		#endregion
 
 		#region Private Methods
-
+		// 一直进行链接--- 掉线重连
 		private void RunSocketThread(object obj)
 		{
 			WebSocket webSocket = (WebSocket)obj;
@@ -255,6 +256,7 @@ namespace SocketIO
 			webSocket.Close();
 		}
 
+		// 打包数据
 		private void RunPingThread(object obj)
 		{
 			WebSocket webSocket = (WebSocket)obj;

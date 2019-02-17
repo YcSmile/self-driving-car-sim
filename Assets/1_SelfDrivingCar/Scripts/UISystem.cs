@@ -4,6 +4,7 @@ using System.Collections;
 using UnityStandardAssets.Vehicles.Car;
 using UnityEngine.SceneManagement;
 
+
 public class UISystem : MonoSingleton<UISystem> {
 
     public CarController carController;
@@ -17,6 +18,8 @@ public class UISystem : MonoSingleton<UISystem> {
 	public Text SaveStatus_Text;
     public GameObject RecordingPause; 
 	public GameObject RecordDisabled;
+    private bool SettingShown;
+    public GameObject LidarSettingPanel;
 	public bool isTraining = false;
 
     private bool recording;
@@ -30,6 +33,14 @@ public class UISystem : MonoSingleton<UISystem> {
         topSpeed = carController.MaxSpeed;
         recording = false;
         RecordingPause.SetActive(false);
+        if (LidarSettingPanel != null) {
+            SettingShown = false;
+            LidarSettingPanel.SetActive(SettingShown);         // 配置
+            // do something
+        }
+
+        LidarSensor.PauseSensor(!isTraining);
+
 		RecordStatus_Text.text = "RECORD";
 		DriveStatus_Text.text = "";
 		SaveStatus_Text.text = "";
@@ -77,7 +88,24 @@ public class UISystem : MonoSingleton<UISystem> {
 			carController.IsRecording = false;
         }
     }
+
+    // 2018-11-28 10:58:43
+    // 添加LiDar设置
+    public void ToggleLidarSetting(){
+
+        LidarSettingPanel.SetActive(!SettingShown);
+
+        SettingShown = !SettingShown;
+
+        // 需要停止旋转
+    }
 	
+    public void TogglePointCloudShow(){
+
+        
+
+        // 需要停止旋转
+    }
     void UpdateCarValues()
     {
         SetMPHValue(carController.CurrentSpeed);
