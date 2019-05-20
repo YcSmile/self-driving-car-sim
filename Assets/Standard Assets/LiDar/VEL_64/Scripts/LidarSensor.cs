@@ -47,7 +47,7 @@ public class LidarSensor:MonoBehaviour
 
     public int numberOfLasers = 2;
     public float rotationSpeedHz = 1.0f;
-    public float rotationAnglePerStep = 45.0f;
+    public float rotationAnglePerStep = 1.0f; // 旋转角度
     public float rayDistance = 100f;
     public float upperFOV = 30f;
     public float lowerFOV = 30f;
@@ -188,7 +188,7 @@ public class LidarSensor:MonoBehaviour
         */
     }
     /**
-    * 扫描点云
+    * 点云扫名 用于 采集样本时
     */
     public LiDarData LaserScan(){
                
@@ -198,7 +198,7 @@ public class LidarSensor:MonoBehaviour
         // rotationAnglePerStep = 0;
         float phorizontalAngle = 0;
         int lineId = 0;
-        for(int step = 0;step < 120;step++){
+        for(int step = 0;step < 360;step++){
             // 进行旋转
             // rotationAnglePerStep
             transform.Rotate(0, rotationAnglePerStep, 0);

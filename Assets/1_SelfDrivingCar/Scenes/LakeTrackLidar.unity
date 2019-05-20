@@ -5131,6 +5131,11 @@ Prefab:
       propertyPath: m_Name
       value: LidarSensor
       objectReference: {fileID: 0}
+    - target: {fileID: 114408122389565812, guid: 342745daebe0d4b3bb0d7bcade5e459b,
+        type: 2}
+      propertyPath: rotationAnglePerStep
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 342745daebe0d4b3bb0d7bcade5e459b, type: 2}
   m_IsPrefabAsset: 0
